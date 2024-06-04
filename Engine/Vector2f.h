@@ -7,9 +7,7 @@ struct Vector2f final
 	// Constructors 
 	// -------------------------
 	Vector2f( );
-	explicit Vector2f( float x, float y );
-	explicit Vector2f( const Point2f& fromPoint, const Point2f& tillPoint );
-	explicit Vector2f( const Point2f& point );
+	Vector2f( float x, float y );
 
 	// -------------------------
 	// Member operators
@@ -20,13 +18,11 @@ struct Vector2f final
 	Vector2f& operator/=( float rhs);
 	Vector2f& operator+=( const Vector2f& rhs);
 	Vector2f& operator-=( const Vector2f& rhs);
-	explicit operator Point2f(); 
 
 	// -------------------------
 	// Methods
 	// -------------------------
 	// Convert to Point2f	
-	Point2f	ToPoint2f( ) const;
 
 	// Are two vectors equal within a threshold?				
 	// u.Equals(v)
@@ -73,9 +69,13 @@ struct Vector2f final
 	// surfaceNormal: represents the normal of the surface at the reflection point
 	Vector2f Reflect( const Vector2f& surfaceNormal ) const;
 
+	Vector2f Limit(float limit) const;
+
 	// Sets the values of x and y
 	void Set( float newX, float newY );
 
+	static Vector2f Lerp(Vector2f start, Vector2f stop, float t);
+	
 	// -------------------------
 	// Datamembers 
 	// -------------------------
@@ -96,14 +96,4 @@ bool operator==( const Vector2f& lhs, const Vector2f& rhs );
 bool operator!=( const  Vector2f& lhs, const Vector2f& rhs );
 
 std::ostream& operator<< ( std::ostream& lhs, const Vector2f& rhs );
-
-// Translating a point by a vector
-Point2f& operator+=(Point2f& lhs, const Vector2f& rhs);
-Point2f operator+(Point2f lhs, const Vector2f& rhs);
-
-Point2f& operator-=(Point2f& lhs, const Vector2f& rhs);
-Point2f operator-(Point2f lhs, const Vector2f& rhs);
-
-// The difference vector between 2 points
-Vector2f operator-( const Point2f& lhs, const Point2f& rhs);
 

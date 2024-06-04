@@ -13,18 +13,6 @@ Window::Window( const std::string& title , float width , float height , bool isV
 }
 
 //-----------------------------------------------------------------
-// Point2f Constructors
-//-----------------------------------------------------------------
-Point2f::Point2f( )
-	:Point2f{ 0.0f, 0.0f }
-{
-}
-Point2f::Point2f( float x, float y )
-	:x{ x }, y{ y }
-{
-}
-
-//-----------------------------------------------------------------
 // Rectf Constructors
 //-----------------------------------------------------------------
 Rectf::Rectf( )
@@ -65,11 +53,11 @@ Circlef::Circlef( )
 }
 
 Circlef::Circlef( float centerX, float centerY, float radius )
-	:Circlef{ Point2f{ centerX, centerY }, radius }
+	:Circlef{ Vector2f{ centerX, centerY }, radius }
 {
 }
 
-Circlef::Circlef( const Point2f& center, float radius )
+Circlef::Circlef( const Vector2f& center, float radius )
 	:center{ center }
 	,radius{ radius }
 {
@@ -84,7 +72,7 @@ Ellipsef::Ellipsef( )
 }
 
 
-Ellipsef::Ellipsef( const Point2f& center, float radiusX, float radiusY )
+Ellipsef::Ellipsef( const Vector2f& center, float radiusX, float radiusY )
 	: center{ center }
 	, radiusX{ radiusX }
 	, radiusY{ radiusY }
@@ -92,6 +80,6 @@ Ellipsef::Ellipsef( const Point2f& center, float radiusX, float radiusY )
 }
 
 Ellipsef::Ellipsef( float centerX, float centerY, float radiusX, float radiusY )
-	: Ellipsef{ Point2f{ centerX, centerY }, radiusX, radiusY }
+	: Ellipsef{ Vector2f{ centerX, centerY }, radiusX, radiusY }
 {
 }

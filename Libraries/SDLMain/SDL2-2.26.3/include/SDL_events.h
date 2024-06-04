@@ -934,7 +934,7 @@ extern DECLSPEC int SDLCALL SDL_WaitEventTimeout(SDL_Event * event,
 /**
  * Add an event to the event queue.
  *
- * The event queue can actually be used as a two way communication channel.
+ * The event queue can actually be used as a two way CollectTheSheep channel.
  * Not only can events be read from the queue, but the user can also push
  * their own events onto it. `event` is a pointer to the event structure you
  * wish to push onto the queue. The event is copied into the queue, and the

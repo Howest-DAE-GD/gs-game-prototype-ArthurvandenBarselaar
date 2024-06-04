@@ -13,7 +13,7 @@ public:
 	Texture& operator=( Texture&& other ) noexcept;
 	~Texture();
 
-	void Draw(const Point2f& dstBottomLeft = {}, const Rectf& srcRect = {}) const;
+	void Draw(const Vector2f& dstBottomLeft = {}, const Rectf& srcRect = {}) const;
 	void Draw( const Rectf& dstRect, const Rectf& srcRect = {} ) const;
 
 	float GetWidth() const;

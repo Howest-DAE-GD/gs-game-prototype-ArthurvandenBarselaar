@@ -4,7 +4,7 @@
 #include <fstream>
 #include "SVGParser.h"
 
-bool SVGParser::GetVerticesFromSvgFile( const std::string& filePath, std::vector<std::vector<Point2f>> &vertices )
+bool SVGParser::GetVerticesFromSvgFile( const std::string& filePath, std::vector<std::vector<Vector2f>> &vertices )
 {
 	// Open the file
 	std::ifstream svgStream( filePath.c_str( ) );
@@ -53,7 +53,7 @@ bool SVGParser::GetVerticesFromSvgFile( const std::string& filePath, std::vector
 	for (size_t i{}; i < vertices.size(); ++i)
 	{
 		// flip the y coordinate
-		for (Point2f& p : vertices[i])
+		for (Vector2f& p : vertices[i])
 		{
 			p.y = viewBox.height - p.y;
 		}
@@ -91,7 +91,7 @@ void SVGParser::RemoveSpaces( std::string& svgString )
 
 }
 
-bool SVGParser::GetVerticesFromSvgString(std::string& svgString, std::vector<std::vector<Point2f>> &vertices)
+bool SVGParser::GetVerticesFromSvgString(std::string& svgString, std::vector<std::vector<Vector2f>> &vertices)
 {
 	size_t startPosContent{};
 	size_t endPosContent{};
@@ -103,7 +103,7 @@ bool SVGParser::GetVerticesFromSvgString(std::string& svgString, std::vector<std
 	while (GetElementContent(svgString, "path", pathElementContent, startPosContent, endPosContent))
 	{
 		// Vector of Point2f to fill with a path's vertices
-		std::vector<Point2f> verticesVector;
+		std::vector<Vector2f> verticesVector;
 
 		// Get d attribute value
 		std::string pathDataValue{};
@@ -148,7 +148,7 @@ bool SVGParser::GetVerticesFromSvgString(std::string& svgString, std::vector<std
 	return true;
 }
 
-bool SVGParser::GetVerticesFromPathData( const std::string& pathData, std::vector<Point2f> &vertices )
+bool SVGParser::GetVerticesFromPathData( const std::string& pathData, std::vector<Vector2f> &vertices )
 {
 	std::string pathCmdChars( ( "mMZzLlHhVvCcSsQqTtAa" ) );
 
@@ -156,13 +156,13 @@ bool SVGParser::GetVerticesFromPathData( const std::string& pathData, std::vecto
 	std::stringstream ss( pathData );
 
 	char cmd{ 0 };
-	Point2f cursor{};
-	Point2f startPoint{};//At the end of the z command, the new current point is set to the initial point of the current subpath.
+	Vector2f cursor{};
+	Vector2f startPoint{};//At the end of the z command, the new current point is set to the initial point of the current subpath.
 
 	bool isOpen = true;
 
 	// http://www.w3.org/TR/SVG/paths.html#Introduction
-	Point2f vertex{};
+	Vector2f vertex{};
 	char pathCommand{};
 	ss >> pathCommand;
 	while ( !ss.eof( ) )
@@ -370,23 +370,23 @@ float SVGParser::ReadSvgValue( std::stringstream& svgStream, bool separatorRequi
 }
 
 // Reads a single point
-Point2f SVGParser::ReadSvgPoint( std::stringstream& svgStream )
+Vector2f SVGParser::ReadSvgPoint( std::stringstream& svgStream )
 {
 	//std::cout << "ReadSvgPoint: "  << svgStream.str() << "\n";
-	Point2f p{};
+	Vector2f p{};
 	p.x = ReadSvgValue( svgStream, true );
 	p.y = ReadSvgValue( svgStream, false );
 	return p;
 }
 
-Point2f SVGParser::FirstSvgPoint( std::stringstream& svgStream, Point2f& cursor, char cmd, bool isOpen, bool advance )
+Vector2f SVGParser::FirstSvgPoint( std::stringstream& svgStream, Vector2f& cursor, char cmd, bool isOpen, bool advance )
 {
 	if ( !isOpen )
 	{
 		std::cerr << "SVGParser::FirstSvgPoint, expected 'Z' or 'z' command";
 	}
 
-	Point2f p = ReadSvgPoint( svgStream );
+	Vector2f p = ReadSvgPoint( svgStream );
 
 	if ( islower( cmd ) )
 	{
@@ -406,14 +406,14 @@ Point2f SVGParser::FirstSvgPoint( std::stringstream& svgStream, Point2f& cursor,
 // taking into account relative and absolute positioning.
 // Advances the cursor if requested.
 // Throws an exception if the figure is not open
-Point2f SVGParser::NextSvgPoint( std::stringstream& svgStream, Point2f& cursor, char cmd, bool isOpen, bool advance )
+Vector2f SVGParser::NextSvgPoint( std::stringstream& svgStream, Vector2f& cursor, char cmd, bool isOpen, bool advance )
 {
 	if ( isOpen )
 	{
 		std::cerr << "SVGParser::NextSvgPoint, expected 'M' or 'm' command\n";
 	}
 
-	Point2f p = ReadSvgPoint( svgStream );
+	Vector2f p = ReadSvgPoint( svgStream );
 
 	if ( islower( cmd ) )
 	{
@@ -431,7 +431,7 @@ Point2f SVGParser::NextSvgPoint( std::stringstream& svgStream, Point2f& cursor, 
 }
 
 // Reads next point, given only the new x coordinate 
-Point2f SVGParser::NextSvgCoordX( std::stringstream& svgStream, Point2f& cursor, char cmd, bool isOpen )
+Vector2f SVGParser::NextSvgCoordX( std::stringstream& svgStream, Vector2f& cursor, char cmd, bool isOpen )
 {
 	if ( isOpen )
 	{
@@ -455,7 +455,7 @@ Point2f SVGParser::NextSvgCoordX( std::stringstream& svgStream, Point2f& cursor,
 }
 
 // Reads next point, given only the new y coordinate 
-Point2f SVGParser::NextSvgCoordY( std::stringstream& svgStream, Point2f& cursor, char cmd, bool isOpen )
+Vector2f SVGParser::NextSvgCoordY( std::stringstream& svgStream, Vector2f& cursor, char cmd, bool isOpen )
 {
 	if ( isOpen )
 	{

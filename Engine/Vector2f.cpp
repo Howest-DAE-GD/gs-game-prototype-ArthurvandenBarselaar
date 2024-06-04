@@ -20,16 +20,6 @@ Vector2f::Vector2f( float x, float y )
 {
 }
 
-Vector2f::Vector2f( const Point2f& fromPoint, const Point2f& tillPoint )
-	: Vector2f{ tillPoint.x - fromPoint.x, tillPoint.y - fromPoint.y }
-{
-}
-
-Vector2f::Vector2f(const Point2f & point) 
-	: Vector2f{ Point2f{ 0.0f, 0.0f }, point }
-{
-}
-
 // -------------------------
 // Methods
 // -------------------------
@@ -38,10 +28,6 @@ bool Vector2f::Equals(const Vector2f& other, float epsilon) const
 	return ( abs(x - other.x) < epsilon ) && ( abs(y - other.y) < epsilon );
 }
 
-Point2f Vector2f::ToPoint2f() const
-{
-	return Point2f{ x, y };
-}
 
 float Vector2f::DotProduct(const Vector2f& other) const
 {
@@ -108,10 +94,25 @@ Vector2f Vector2f::Reflect( const Vector2f& surfaceNormal ) const
 	return (*this) - 2 * ( this->DotProduct( surfaceNormal ) * surfaceNormal );
 }
 
+Vector2f Vector2f::Limit(const float limit) const
+{
+	if(this->Length() > limit)
+	{
+		return this->Normalized() * limit;
+	}
+	
+	return *this;
+}
+
 void Vector2f::Set(float newX, float newY)
 {
 	x = newX;
 	y = newY;
+}
+
+Vector2f Vector2f::Lerp(Vector2f start, Vector2f stop, float t)
+{
+	return Vector2f{start + (stop - start) * t };
 }
 
 // -------------------------
@@ -150,11 +151,6 @@ Vector2f& Vector2f::operator-=(const Vector2f& rhs)
 {
 	*this += -rhs;
 	return *this;
-}
-
-Vector2f::operator Point2f()
-{
-	return Point2f{ x,y };
 }
 
 // -------------------------
@@ -201,36 +197,3 @@ std::ostream& operator<< ( std::ostream& lhs, const Vector2f& rhs )
 	return lhs;
 }
 
-// Point2f related operators
-Point2f& operator+=(Point2f& lhs, const Vector2f& rhs)
-{
-	lhs.x += rhs.x;
-	lhs.y += rhs.y;
-	return lhs;
-}
-
-Point2f operator+(Point2f lhs, const Vector2f& rhs)
-{
-	lhs += rhs;
-	return lhs;
-}
-
-Point2f& operator-=(Point2f& lhs, const Vector2f& rhs)
-{
-	lhs.x -= rhs.x;
-	lhs.y -= rhs.y;
-	return lhs;
-}
-
-Point2f operator-(Point2f lhs, const Vector2f& rhs)
-{
-	lhs -= rhs;
-	return lhs;
-}
-
-
-Vector2f operator-(const Point2f& lhs, const Point2f& rhs)
-{
-	Vector2f v{ lhs.x - rhs.x, lhs.y - rhs.y };
-	return v;
-}

@@ -18,35 +18,30 @@ Vector2f Matrix2x3::Transform(const Vector2f& vector) const
 	return Vector2f{ vector.x * dirX + vector.y * dirY };
 }
 
-Point2f Matrix2x3::Transform(const Point2f& point) const
-{
-	Vector2f v{ Transform( Vector2f{ point } ) + orig };
-	return  v.ToPoint2f();
-}
 
-std::vector<Point2f> Matrix2x3::Transform(const Rectf & r) const
+std::vector<Vector2f> Matrix2x3::Transform(const Rectf & r) const
 {
-	std::vector<Point2f> vertices{ 4 };
-	vertices[0] = Transform( Point2f{ r.left, r.bottom } );
-	vertices[1] = Transform( Point2f{ r.left, r.bottom + r.height } );
-	vertices[2] = Transform( Point2f{ r.left + r.width, r.bottom + r.height } );
-	vertices[3] = Transform( Point2f{ r.left + r.width, r.bottom } );
+	std::vector<Vector2f> vertices{ 4 };
+	vertices[0] = Transform( Vector2f{ r.left, r.bottom } );
+	vertices[1] = Transform( Vector2f{ r.left, r.bottom + r.height } );
+	vertices[2] = Transform( Vector2f{ r.left + r.width, r.bottom + r.height } );
+	vertices[3] = Transform( Vector2f{ r.left + r.width, r.bottom } );
 	return vertices;
 }
 
-void Matrix2x3::Transform( const Rectf& r, Point2f* transVertices ) const
+void Matrix2x3::Transform( const Rectf& r, Vector2f* transVertices ) const
 {
-	transVertices[0] = Transform( Point2f{ r.left, r.bottom } );
-	transVertices[1] = Transform( Point2f{ r.left, r.bottom + r.height } );
-	transVertices[2] = Transform( Point2f{ r.left + r.width, r.bottom + r.height } );
-	transVertices[3] = Transform( Point2f{ r.left + r.width, r.bottom } );
+	transVertices[0] = Transform( Vector2f{ r.left, r.bottom } );
+	transVertices[1] = Transform( Vector2f{ r.left, r.bottom + r.height } );
+	transVertices[2] = Transform( Vector2f{ r.left + r.width, r.bottom + r.height } );
+	transVertices[3] = Transform( Vector2f{ r.left + r.width, r.bottom } );
 }
 
 
-std::vector<Point2f> Matrix2x3::Transform( const std::vector<Point2f>& vertices ) const
+std::vector<Vector2f> Matrix2x3::Transform( const std::vector<Vector2f>& vertices ) const
 {
 	size_t nrVectices{ vertices.size( ) };
-	std::vector<Point2f> transformedVertices{ nrVectices };
+	std::vector<Vector2f> transformedVertices{ nrVectices };
 	for ( size_t idx{ 0 }; idx < nrVectices; ++idx )
 	{
 		transformedVertices[idx] = Transform( vertices[idx] );
@@ -54,13 +49,13 @@ std::vector<Point2f> Matrix2x3::Transform( const std::vector<Point2f>& vertices 
 	return transformedVertices;
 }
 
-void Matrix2x3::Transform( const std::vector<Point2f>& vertices, Point2f* transVertices ) const
+void Matrix2x3::Transform( const std::vector<Vector2f>& vertices, Vector2f* transVertices ) const
 {
 	Transform( vertices.data( ), transVertices, vertices.size( ) );
 }
 
 
-void Matrix2x3::Transform( const Point2f* vertices, Point2f* transVertices, size_t nrVertices ) const
+void Matrix2x3::Transform( const Vector2f* vertices, Vector2f* transVertices, size_t nrVertices ) const
 {
 	for ( size_t idx{ 0 }; idx < nrVertices; ++idx )
 	{

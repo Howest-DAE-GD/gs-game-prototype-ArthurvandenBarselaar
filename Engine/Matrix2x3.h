@@ -19,35 +19,31 @@ struct Matrix2x3 final
 	// Vector2f vTransformed = mat.Transform(v);
 	Vector2f Transform( const Vector2f& v ) const;
 
-	// Transform a point by this matrix, including translation			
-	// Point2f pTransformed = mat.Transform(p);
-	Point2f Transform( const Point2f& p ) const;
-
 	// Transform a Rectf by this matrix, including translation	
 	// std::vector<Point2f> transformedVertices = mat.Transform(r);
-	std::vector<Point2f> Transform( const Rectf& r ) const;
+	std::vector<Vector2f> Transform( const Rectf& r ) const;
 	
 
 	// Transform a Rectf by this matrix, including translation
 	// Pass pointer to resulting array (size should be at least 4)
 	//   Point2f transformedVertices[4];
 	//   Transform(r, transformedVertices);
-	void Transform( const Rectf& r, Point2f* transVertices ) const;
+	void Transform( const Rectf& r, Vector2f* transVertices ) const;
 
 	// Transform a Polygon by this matrix, including translation	
 	// std::vector<Point2f> transformedVertices = mat.Transform(vertices);
-	std::vector<Point2f> Transform( const std::vector<Point2f>& vertices ) const;
+	std::vector<Vector2f> Transform( const std::vector<Vector2f>& vertices ) const;
 
 	// Transform a Polygon by this matrix, including translation	
 	// Pass pointer to resulting array (size should be at least size of polygon)
 	//   Point2f transformedVertices[vertices.size()];
 	//   Transform(vertices, transformedVertices);
-	void Transform( const std::vector<Point2f>& vertices, Point2f* transVertices ) const;
+	void Transform( const std::vector<Vector2f>& vertices, Vector2f* transVertices ) const;
 
 	// Transform a Polygon by this matrix, including translation	
 	//   Point2f transformedVertices[nrVertices];
 	//   Transform(vertices, nrVertices, transformedVertices);
-	void Transform( const Point2f* vertices,  Point2f* transVertices, size_t nrVertices ) const;
+	void Transform( const Vector2f* vertices,  Vector2f* transVertices, size_t nrVertices ) const;
 
 	// Calculate the determinant
 	float Determinant( ) const;
