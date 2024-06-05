@@ -6,13 +6,14 @@
 #include "utils.h"
 
 
-Sheep::Sheep(const Vector2f& pos, Vector2f* collectorPtr, Vector2f* playerPos, std::vector<Sheep*>* allSheep):
+Sheep::Sheep(const Vector2f& pos, Vector2f* collectorPtr, Vector2f* playerPos, std::vector<Sheep*>* allSheep, GameState* currentGameState):
     m_Position(pos),
     m_Collector(collectorPtr),
     m_PlayerPos(playerPos),
+    m_CurrentGameState(currentGameState),
     m_SheepCollection(allSheep)
 {
-    m_RandomPickedTarget = Vector2f{utils::Random(50.0f, Game::m_WindowSize.x - 50.0f), utils::Random(50.0f, Game::m_WindowSize.y- 50.0f)};
+    GetRandomPosition();
 }
 
 Vector2f Sheep::SeekPoint(const Vector2f& target) const
@@ -30,8 +31,7 @@ Vector2f Sheep::MoveToCollector() const
 {
     return SeekPoint(*m_Collector);
 }
-
-Vector2f Sheep::Boundaries()
+Vector2f Sheep::Boundaries() const
 {
     constexpr float offset = 50;
 
@@ -57,94 +57,14 @@ Vector2f Sheep::Boundaries()
     
     return {};
 }
-
-Vector2f Sheep::Wandering()
+Vector2f Sheep::Wandering() const
 {
-    if ((m_RandomPickedTarget - m_Position).Length() < 10)
-    {
-        m_RandomPickedTarget = Vector2f{utils::Random(50.0f, Game::m_WindowSize.x - 50.0f), utils::Random(50.0f, Game::m_WindowSize.y- 50.0f)};
-    }
-
-    Vector2f desired = m_RandomPickedTarget - m_Position;
-    desired = desired.Normalized() * m_RelaxSpeed;
-    Vector2f steer = desired - m_Velocity;
-    steer = steer.Normalized() * m_MaxForce;
-
-    return steer;
+    return {};
 }
-
-void Sheep::Update(const float deltaTime)
-{
-    if(!m_IsSave)
-    {
-        if((*m_Collector - m_Position).Length() < 50)
-        {
-            m_IsSave = true;
-        }
-    }
-    else if(m_IsSave)
-    {
-        m_Velocity += MoveToCollector();
-    }
-    
-    
-    if((*m_PlayerPos - m_Position).Length() < 60)
-    {
-        m_DoingWhatWolfSays = true;
-    }
-    else
-    {
-        m_DoingWhatWolfSays = false;
-    }
-        
-    if(m_DoingWhatWolfSays)
-    {
-        m_Velocity += RunAwayFromPlayer();
-    }
-    else
-    {
-        m_Velocity += Wandering();
-    }
-    
-    m_Velocity += Separation() * 2;
-    m_Velocity += Aligment() * 2;
-    m_Velocity += Cohesion();
-    
-    m_Velocity += Boundaries() * 50;
-
-    m_Velocity = m_Velocity.Limit(m_MaxSpeed);
-    
-    m_Position += m_Velocity * deltaTime;
-}
-
-void Sheep::Draw() const
-{
-    if(Game::m_TimeYouHaveLeft < 0 && !m_IsSave)
-    {
-        Explode(-Game::m_TimeYouHaveLeft);
-    }
-    else
-    {
-        utils::SetColor({1,1,1,1});
-        if(m_IsSave)
-        {
-            utils::SetColor({0,1,0,1});
-        }
-        else if(m_DoingWhatWolfSays)
-        {
-            utils::SetColor({0,1,1,1});
-            utils::DrawLine(m_Position, m_Position + m_Velocity.Normalized()*10);
-        }
-        utils::DrawEllipse(m_Position, 10, 10);
-    }
-
-}
-
 Vector2f Sheep::RunAwayFromPlayer() const
 {
     return SeekPoint(m_Position + m_Position - *m_PlayerPos);
 }
-
 Vector2f Sheep::Separation() const
 {
     const float distanceOfSepartion = 20;
@@ -175,9 +95,7 @@ Vector2f Sheep::Separation() const
 
     return Vector2f{};
 }
-
-
-Vector2f Sheep::Aligment() const
+Vector2f Sheep::Alignment() const
 {
     const float distanceOfAlign = 50;
     Vector2f sum{};
@@ -206,7 +124,6 @@ Vector2f Sheep::Aligment() const
     
     return {};
 }
-
 Vector2f Sheep::Cohesion() const
 {
     const float distanceOfCohesion = 50;
@@ -235,6 +152,94 @@ Vector2f Sheep::Cohesion() const
     return {};
 }
 
+void Sheep::GetRandomPosition()
+{
+    m_RandomPickedTarget = Vector2f{utils::Random(50.0f, Game::m_WindowSize.x - 50.0f), utils::Random(50.0f, Game::m_WindowSize.y- 50.0f)};
+}
+
+void Sheep::Update(const float deltaTime)
+{
+    if(*m_CurrentGameState == GameState::running)
+    {
+        if(!m_IsSave)
+        {
+            if((*m_Collector - m_Position).Length() < 50)
+            {
+                m_IsSave = true;
+            }
+        
+            if((*m_PlayerPos - m_Position).Length() < 60)
+            {
+                m_DoingWhatWolfSays = true;
+            }
+            else
+            {
+                m_DoingWhatWolfSays = false;
+            }
+        
+            if(m_DoingWhatWolfSays)
+            {
+                m_Velocity += RunAwayFromPlayer();
+            }
+            else
+            {
+                m_Velocity += Wandering();
+            }
+
+            m_Velocity += Separation() * 2;
+            m_Velocity += Alignment() * 2;
+            m_Velocity += Cohesion();
+        
+        }
+        else if(m_IsSave)
+        {
+            m_Velocity += Separation() * 2;
+            m_Velocity += MoveToCollector();
+        }
+    
+        m_Velocity += Boundaries() * 50;
+        m_Velocity = m_Velocity.Limit(m_MaxSpeed);
+        m_Position += m_Velocity * deltaTime;
+    }
+    else if(*m_CurrentGameState == GameState::sheepDead)
+    {
+        m_DeadTimer += deltaTime;
+        GetRandomPosition();
+    }
+    else if(*m_CurrentGameState == GameState::sheepGoingToField)
+    {
+        m_IsSave = false;
+        m_DeadTimer = 0;
+        m_Position = Vector2f::Lerp(m_Position, m_RandomPickedTarget, 5 * deltaTime); // haha bad
+    }
+    
+
+    
+}
+
+
+void Sheep::Draw() const
+{
+    if(*m_CurrentGameState == GameState::sheepDead && !m_IsSave)
+    {
+        Explode(-m_DeadTimer);
+    }
+    else
+    {
+        utils::SetColor({1,1,1,1});
+        if(m_IsSave)
+        {
+            utils::SetColor({0,1,0,1});
+        }
+        else if(m_DoingWhatWolfSays)
+        {
+            utils::SetColor({0,1,1,1});
+            utils::DrawLine(m_Position, m_Position + m_Velocity.Normalized()*10);
+        }
+        utils::DrawEllipse(m_Position, 10, 10);
+    }
+
+}
 void Sheep::Explode(float timeDead) const
 {
     if(timeDead > 1) timeDead = 1;

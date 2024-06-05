@@ -2,10 +2,13 @@
 #include <vector>
 
 #include "BaseGame.h"
+#include "GameState.h"
 #include "Sheep.h"
 #include "Vector2f.h"
 
 class Texture;
+
+
 
 class Game : public BaseGame
 {
@@ -29,14 +32,11 @@ public:
 	void ProcessMouseUpEvent( const SDL_MouseButtonEvent& e ) override;
 
 	static Vector2f m_WindowSize;
-	static float m_TimeYouHaveLeft;
+	float m_TimeYouHaveLeft;
 
-	int sheepAlive{50};
-	int sheepCurrentlyAlive{};
-
-	float timer2{};
-	bool deadScreen{};
-	bool GameOver{};
+	int m_CurrentSheepAlive{50};
+	
+	GameState m_GameState;
 	
 private:
 
@@ -44,7 +44,6 @@ private:
 	void Initialize();
 	void Cleanup( );
 	void ClearBackground( ) const;
-	void Restart();
 
 	Vector2f m_PlayerPosition;
 

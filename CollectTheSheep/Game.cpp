@@ -7,7 +7,6 @@
 
 Vector2f Game::m_WindowSize{};
 std::vector<Sheep*> Game::m_Sheep;
-float Game::m_TimeYouHaveLeft{40.0f};
 
 Game::Game( const Window& window ) 
 	:BaseGame{ window },
@@ -24,8 +23,12 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	Restart();
-
+	m_GameState = GameState::sheepGoingToField;
+	m_TimeYouHaveLeft = 0.5;
+	for (int i{}; i < m_CurrentSheepAlive; ++i)
+	{
+		m_Sheep.push_back(new Sheep{{utils::Random(0.0f, m_WindowSize.x), utils::Random(0.0f, m_WindowSize.y)}, &m_Collector, &m_PlayerPosition, &m_Sheep, &m_GameState});
+	}
 }
 
 
@@ -33,81 +36,111 @@ void Game::Cleanup( )
 {
 }
 
-void Game::Update( float elapsedSec )
+void Game::Update(const float elapsedSec )
 {
-	// Check keyboard state
-
-	float speed = 100;
-
-	Vector2f inputKeyboard;
-
 	m_TimeYouHaveLeft -= elapsedSec;
-	timer2 -= elapsedSec;
 
-	if(m_TimeYouHaveLeft < 0 && deadScreen == false)
+	switch (m_GameState)
 	{
-		timer2 = 5;
-		deadScreen = true;
+	case GameState::sheepGoingToField:
+		for (int i = 0; i < m_Sheep.size(); ++i)
+		{
+			m_Sheep[i]->Update(elapsedSec);
+		}
 		
-		sheepAlive = 0;
-
-		for (int i{}; i < m_Sheep.size(); ++i)
+		if(m_TimeYouHaveLeft < 0)
 		{
-			if(m_Sheep[i]->m_IsSave)
-				++sheepAlive;
+			m_GameState = GameState::running;
+			m_TimeYouHaveLeft = 40;
 		}
-
-		if(sheepAlive <= 0 || sheepAlive >= m_Sheep.size())
-		{
-			GameOver = true;
-			GameOverText = new Texture("HighScore: " + std::to_string(sheepCurrentlyAlive), "arial.ttf", 64, Color4f{1,1,1,1});
-		}
-	}
-
-	if(deadScreen && timer2 < 0)
-	{
-		if(GameOver) return;
-		Restart();
-	}
-
-	if(!deadScreen)
-	{
-		const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
-		if ( pStates[SDL_SCANCODE_RIGHT] )
-		{
-			inputKeyboard.x += 1;
-		}
-		if ( pStates[SDL_SCANCODE_LEFT])
-		{
-			inputKeyboard.x += -1;
-		}
-		if ( pStates[SDL_SCANCODE_UP] )
-		{
-			inputKeyboard.y += 1;
-		}
-		if ( pStates[SDL_SCANCODE_DOWN])
-		{
-			inputKeyboard.y += -1;
-		}
-		inputKeyboard = inputKeyboard.Normalized();
-		inputKeyboard = inputKeyboard * speed * elapsedSec;
 		
-		m_PlayerPosition += inputKeyboard;
-	}
+		break;
+	case GameState::running:
+		{
+			int sheepAlive{};
 
-	sheepCurrentlyAlive = 0;
+			for (int i{}; i < m_Sheep.size(); ++i)
+			{
+				if(m_Sheep[i]->m_IsSave)
+					++sheepAlive;
+			}
+
+			if(sheepAlive >= m_CurrentSheepAlive)
+			{
+				m_GameState = GameState::gameOver;
+				GameOverText = new Texture("HighScore: " + std::to_string(sheepAlive), "arial.ttf", 64, Color4f{1,1,1,1});
+			}
+			
+			if(m_TimeYouHaveLeft < 0 && m_GameState == GameState::running)
+			{
+				m_TimeYouHaveLeft = 1;
+				m_GameState = GameState::sheepDead;
+
+				m_CurrentSheepAlive = sheepAlive;
+			}
+
+			constexpr float speed = 100;
+			Vector2f inputKeyboard;
+
+			const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
+			if ( pStates[SDL_SCANCODE_RIGHT] )
+			{
+				inputKeyboard.x += 1;
+			}
+			if ( pStates[SDL_SCANCODE_LEFT])
+			{
+				inputKeyboard.x += -1;
+			}
+			if ( pStates[SDL_SCANCODE_UP] )
+			{
+				inputKeyboard.y += 1;
+			}
+			if ( pStates[SDL_SCANCODE_DOWN])
+			{
+				inputKeyboard.y += -1;
+			}
+			inputKeyboard = inputKeyboard.Normalized();
+			inputKeyboard = inputKeyboard * speed * elapsedSec;
+		
+			m_PlayerPosition += inputKeyboard;
+
+			for (int i{}; i < m_Sheep.size(); ++i)
+			{
+				m_Sheep[i]->Update(elapsedSec);
+		
+				if((m_PlayerPosition - m_Sheep[i]->m_Position).Length() < 40)
+				{
+					m_Sheep[i]->m_Position -= (m_PlayerPosition - m_Sheep[i]->m_Position).Normalized();
+				}
+			}
+		}
+		break;
+	case GameState::sheepDead:
+
+		for (Sheep* sheep : m_Sheep)
+		{
+			sheep->Update(elapsedSec);
+		}
+		
+		if(m_TimeYouHaveLeft < 0)
+		{
+			for (int i = m_Sheep.size() - 1; i >= 0; --i)
+			{
+				if(!m_Sheep[i]->m_IsSave)
+				{
+					m_Sheep.erase(m_Sheep.begin() + i);
+				}
+			}
+
+			
+			m_TimeYouHaveLeft = 0.5;
+			m_GameState = GameState::sheepGoingToField;
+		}
+		break;
+	case GameState::gameOver:
+		break;
+	}
 	
-	for (int i{}; i < m_Sheep.size(); ++i)
-	{
-		m_Sheep[i]->Update(elapsedSec);
-		
-		if((m_PlayerPosition - m_Sheep[i]->m_Position).Length() < 40)
-		{
-			m_Sheep[i]->m_Position -= (m_PlayerPosition - m_Sheep[i]->m_Position).Normalized();
-		}
-
-		if(m_Sheep[i]->m_IsSave) ++sheepCurrentlyAlive;
-	}
 	
 }
 
@@ -130,7 +163,7 @@ void Game::Draw( ) const
 	utils::SetColor({1,0,0,1});
 	utils::FillRect(10, m_WindowSize.y- 30, m_TimeYouHaveLeft / 40 * m_WindowSize.x - 10, 30);
 
-	if(GameOver)
+	if(m_GameState == GameState::gameOver)
 	{
 		GameOverText->Draw(Vector2f{30, 30});
 		// Something
@@ -204,20 +237,4 @@ void Game::ClearBackground( ) const
 {
 	glClearColor( 30/255.0f, 30/255.0f, 30/255.0f, 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT );
-}
-
-void Game::Restart()
-{
-	m_Sheep.clear();
-	
-	m_PlayerPosition = Vector2f{100,100};
-	m_TimeYouHaveLeft = 40.0f;
-	
-	timer2 = 0;
-	deadScreen = false;
-	
-	for (int i{}; i < sheepAlive; ++i)
-	{
-		m_Sheep.push_back(new Sheep{{utils::Random(0.0f, m_WindowSize.x), utils::Random(0.0f, m_WindowSize.y)}, &m_Collector, &m_PlayerPosition, &m_Sheep});
-	}
 }
