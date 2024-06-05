@@ -3,10 +3,12 @@
 
 #include "GameState.h"
 
-class Sheep
+class Texture;
+class Sheep final
 {
 public:
     Sheep(const Vector2f& pos, Vector2f* collectorPtr, Vector2f* playerPos, std::vector<Sheep*>* allSheep, GameState* currentGameState);
+    ~Sheep();
     void Update(float deltaTime);
     void Draw() const;
 
@@ -15,6 +17,10 @@ public:
     Vector2f m_Velocity{};
     
 private:
+
+    Texture* m_FrontTexture{};
+    Texture* m_BackTexture{};
+    Texture* m_SideTexture{};
     
     float m_MaxSpeed{30};
     float m_RelaxSpeed{1};

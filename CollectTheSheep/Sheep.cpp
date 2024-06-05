@@ -2,7 +2,10 @@
 #include "Sheep.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <valarray>
+
 #include "Game.h"
+#include "Texture.h"
 #include "utils.h"
 
 
@@ -13,7 +16,20 @@ Sheep::Sheep(const Vector2f& pos, Vector2f* collectorPtr, Vector2f* playerPos, s
     m_CurrentGameState(currentGameState),
     m_SheepCollection(allSheep)
 {
+    if(m_FrontTexture == nullptr)
+    {
+        m_FrontTexture = new Texture{"sheep_down.png"};
+        m_BackTexture = new Texture{"sheep_up.png"};
+        m_SideTexture = new Texture{"sheep_right_left.png"};
+    }
+    
     GetRandomPosition();
+}
+Sheep::~Sheep()
+{
+    delete m_FrontTexture;
+    delete m_BackTexture;
+    delete m_SideTexture;
 }
 
 Vector2f Sheep::SeekPoint(const Vector2f& target) const
@@ -237,6 +253,53 @@ void Sheep::Draw() const
             utils::DrawLine(m_Position, m_Position + m_Velocity.Normalized()*10);
         }
         utils::DrawEllipse(m_Position, 10, 10);
+        
+        glPushMatrix();
+        glTranslatef(m_Position.x, m_Position.y, 0);
+        glScalef(0.3f, 0.3f,0.3f);
+        const float rotation = std::atan2(m_Velocity.y, m_Velocity.x);;
+        if(rotation > 0.0f)
+        {
+            if(rotation > 1.0/4*M_PI && rotation < 3.0/4*M_PI)
+            {
+                m_BackTexture->Draw({-50,-50});
+            }
+            else
+            {
+                if(rotation > 1/2*M_PI)
+                {
+                    glScalef(-1,1,1);
+                    m_SideTexture->Draw({-50,-50});
+                }else
+                {
+                    m_SideTexture->Draw({-50,-50});
+                }
+            }
+        }
+        else
+        {
+            if(rotation < -1.0/4*M_PI && rotation > -3.0/4*M_PI)
+            {
+                m_FrontTexture->Draw({-50,-50});
+            }
+            else
+            {
+                if(rotation > -1/2*M_PI)
+                {
+                    glScalef(-1,1,1);
+                    m_SideTexture->Draw({-50,-50});
+                }else
+                {
+                    m_SideTexture->Draw({-50,-50});
+                }
+            }
+        }
+
+        glPopMatrix();
+
+
+        
+
     }
 
 }
